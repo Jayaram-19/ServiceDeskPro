@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Loader2, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -89,6 +89,12 @@ const Login = () => {
           </button>
         </form>
 
+        <div className="mt-6 text-center text-sm">
+          <span className="text-muted-foreground">Don't have an account? </span>
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            Sign Up
+          </Link>
+        </div>
 
       </div>
     </div>

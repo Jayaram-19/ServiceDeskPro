@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Organization = require('../models/Organization');
+const Department = require('../models/Department');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/tokenUtils');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAction } = require('../services/auditService');
@@ -11,17 +13,32 @@ const register = async (req, res, next) => {
     const exists = await User.findOne({ email });
     if (exists) return errorResponse(res, 'Email already registered', 409);
 
+    // Find or create organization based on string name
+    let orgDoc = await Organization.findOne({ name: organization });
+    if (!orgDoc) {
+      orgDoc = await Organization.create({ name: organization });
+    }
+
+    // Find or create department based on string name
+    let deptDoc = null;
+    if (department) {
+      deptDoc = await Department.findOne({ name: department, organization: orgDoc._id });
+      if (!deptDoc) {
+        deptDoc = await Department.create({ name: department, organization: orgDoc._id });
+      }
+    }
+
     const user = await User.create({
       name,
       email,
       passwordHash: password, // pre-save hook hashes it
       role: role || 'employee',
-      organization,
-      department,
+      organization: orgDoc._id,
+      department: deptDoc ? deptDoc._id : undefined,
       phone,
     });
 
-    await logAction({ action: 'USER_REGISTERED', performedBy: user._id, targetModel: 'User', targetId: user._id, organization, req });
+    await logAction({ action: 'USER_REGISTERED', performedBy: user._id, targetModel: 'User', targetId: user._id, organization: orgDoc._id, req });
 
     return successResponse(res, { user }, 'Registration successful', 201);
   } catch (err) {
