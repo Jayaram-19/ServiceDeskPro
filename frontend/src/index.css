@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 43% 95%; /* #f8f4ec */
+    --foreground: 20 33% 18%; /* #3c281e */
+    --card: 37 100% 97%; /* #fffaf2 */
+    --card-foreground: 20 33% 18%; /* #3c281e */
+    --popover: 37 100% 97%; /* #fffaf2 */
+    --popover-foreground: 20 33% 18%;
+    --primary: 24 48% 28%; /* #6b4226 */
+    --primary-foreground: 37 100% 97%; /* #fffaf2 */
+    --secondary: 33 44% 85%; /* #eadcca */
+    --secondary-foreground: 23 20% 37%; /* #70594b */
+    --muted: 33 44% 85%; /* #eadcca */
+    --muted-foreground: 23 20% 37%; /* #70594b */
+    --accent: 33 44% 85%; /* #eadcca */
+    --accent-foreground: 20 33% 18%; /* #3c281e */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 33 44% 85%; /* #eadcca */
+    --input: 33 44% 85%; /* #eadcca */
+    --ring: 22 40% 39%; /* #8c5a3c */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Forcing unified theme by mirroring light theme variables */
+    --background: 40 43% 95%;
+    --foreground: 20 33% 18%;
+    --card: 37 100% 97%;
+    --card-foreground: 20 33% 18%;
+    --popover: 37 100% 97%;
+    --popover-foreground: 20 33% 18%;
+    --primary: 24 48% 28%;
+    --primary-foreground: 37 100% 97%;
+    --secondary: 33 44% 85%;
+    --secondary-foreground: 23 20% 37%;
+    --muted: 33 44% 85%;
+    --muted-foreground: 23 20% 37%;
+    --accent: 33 44% 85%;
+    --accent-foreground: 20 33% 18%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 33 44% 85%;
+    --input: 33 44% 85%;
+    --ring: 22 40% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
