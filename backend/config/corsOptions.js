@@ -1,5 +1,7 @@
+const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'http://localhost:5173';
+
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
+  clientUrl,
 ];
 
 const corsOptions = {
