@@ -40,7 +40,7 @@ const Register = () => {
     <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 dark:bg-background py-10">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center flex flex-col items-center">
-          <img src="/logo.png" alt="ServiceDesk Pro" className="h-16 w-auto mix-blend-multiply mb-2" />
+          <img src="/logo.png" alt="ServiceDesk Pro" className="h-10 w-auto mix-blend-multiply mb-3" />
           <p className="text-sm text-muted-foreground">Create a new account</p>
         </div>
 
