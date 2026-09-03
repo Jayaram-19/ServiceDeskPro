@@ -131,7 +131,11 @@ const logout = async (req, res, next) => {
         // token invalid/expired — still proceed with logout
       }
     }
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    });
     return successResponse(res, {}, 'Logged out successfully');
   } catch (err) {
     next(err);
