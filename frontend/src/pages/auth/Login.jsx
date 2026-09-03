@@ -42,9 +42,9 @@ const Login = () => {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-background">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground">ServiceDesk Pro</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to your account</p>
+        <div className="mb-8 text-center flex flex-col items-center">
+          <img src="/logo.png" alt="ServiceDesk Pro" className="h-16 w-auto mix-blend-multiply mb-2" />
+          <p className="text-sm text-muted-foreground">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

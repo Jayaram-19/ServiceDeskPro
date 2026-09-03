@@ -70,10 +70,9 @@ const Sidebar = ({ role }) => {
 
   const NavContent = ({ onNavigate }) => (
     <>
-      <div className="flex h-16 items-center justify-center border-b border-border px-6 shrink-0">
-        <Link to="/" className="flex items-center gap-2 font-bold text-primary text-xl hover:opacity-80 transition-opacity">
-          <Ticket className="h-6 w-6" />
-          <span>ServiceDesk Pro</span>
+      <div className="flex h-16 items-center justify-center border-b border-border px-6 shrink-0 py-2">
+        <Link to="/" className="flex items-center justify-center h-full w-full hover:opacity-80 transition-opacity">
+          <img src="/logo.png" alt="ServiceDesk Pro" className="h-8 w-auto object-contain mix-blend-multiply" />
         </Link>
       </div>
       
