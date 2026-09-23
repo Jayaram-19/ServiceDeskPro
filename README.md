@@ -64,6 +64,24 @@ ServiceDeskPro/
 
 ServiceDesk Pro enforces a strict Role-Based Access Control (RBAC) system. The data flow and capabilities differ significantly based on the authenticated user's role.
 
+### High-Level Architecture Data Flow
+```mermaid
+graph TD
+    Client[Client Browser] -->|HTTP/REST| API[Express API Backend]
+    
+    subgraph Backend Services
+        API --> Auth[RBAC & Auth Middleware]
+        Auth --> Controllers[Business Logic Controllers]
+        
+        Controllers <--> Gemini[Google Gemini AI]
+        Controllers <--> Models[Mongoose Models]
+        
+        Cron[Node-Cron Scheduler] -->|SLA Checks| Models
+    end
+    
+    Models <--> DB[(MongoDB)]
+```
+
 ### 1. Admin
 - **Data Flow:** Full system access. Can view, create, update, and delete any resource in the database.
 - **Capabilities:**
@@ -101,6 +119,24 @@ ServiceDesk Pro enforces a strict Role-Based Access Control (RBAC) system. The d
   - Monitor warranties and asset assignments to employees.
 
 ### Typical Ticket Data Flow
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Open: Employee Submits
+    Open --> AI_Analysis: System (Gemini)
+    AI_Analysis --> Open: Categorized
+    Open --> Assigned: Manager/Tech Action
+    Assigned --> In_Progress: Tech Starts Work
+    In_Progress --> Resolved: Tech Fixes Issue
+    Resolved --> Closed: Employee Confirms
+    
+    Open --> Escalated: SLA Breach (Cron)
+    Assigned --> Escalated: SLA Breach (Cron)
+    In_Progress --> Escalated: SLA Breach (Cron)
+    Escalated --> Assigned: Manager Reassigns
+```
+
 1. **Creation:** An `Employee` submits a ticket.
 2. **AI Classification:** The Backend uses Gemini AI to parse the ticket description, auto-categorize it, assign priority, and suggest solutions.
 3. **Assignment:** A `Technician` picks up the ticket or a `Manager` assigns it.
