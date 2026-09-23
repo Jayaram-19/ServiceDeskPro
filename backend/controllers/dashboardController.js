@@ -99,12 +99,12 @@ const getEmployeeDashboard = async (req, res, next) => {
     const { _id: userId, organization } = req.user;
 
     const [open, pending, resolved, myAssets, recentTickets] = await Promise.all([
-      Ticket.countDocuments({ organization, requester: userId, status: { $in: ['Open', 'Assigned', 'In Progress'] } }),
-      Ticket.countDocuments({ organization, requester: userId, status: 'Pending' }),
-      Ticket.countDocuments({ organization, requester: userId, status: { $in: ['Resolved', 'Closed'] } }),
-      Asset.find({ organization, assignedTo: userId }).populate('department', 'name').limit(5),
-      Ticket.find({ organization, requester: userId }).sort({ createdAt: -1 }).limit(5)
-        .populate('category', 'name').populate('assignedTo', 'name avatar'),
+      Ticket.countDocuments({ organization, status: { $in: ['Open', 'Assigned', 'In Progress'] } }),
+      Ticket.countDocuments({ organization, status: 'Pending' }),
+      Ticket.countDocuments({ organization, status: { $in: ['Resolved', 'Closed'] } }),
+      Asset.find({ organization }).populate('department', 'name').limit(5),
+      Ticket.find({ organization }).sort({ createdAt: -1 }).limit(5)
+        .populate('category', 'name').populate('assignedTo', 'name avatar').populate('requester', 'name'),
     ]);
 
     return successResponse(res, {

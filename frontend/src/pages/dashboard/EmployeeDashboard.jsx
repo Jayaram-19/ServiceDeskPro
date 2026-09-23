@@ -61,7 +61,7 @@ const EmployeeDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between"
       >
-        <h2 className="text-2xl font-bold tracking-tight">My Overview</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Organization Overview</h2>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Link 
             to="/employee/tickets" 
@@ -75,7 +75,7 @@ const EmployeeDashboard = () => {
       <StaggerContainer className="grid gap-4 md:grid-cols-3">
         <AnimatedListItem className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col gap-2">
           <div className="flex flex-row items-center justify-between pb-2">
-            <h3 className="tracking-tight text-sm font-medium">My Open Tickets</h3>
+            <h3 className="tracking-tight text-sm font-medium">Open Tickets</h3>
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold">{data.stats?.open ?? data.myOpenTickets ?? 0}</div>
@@ -106,7 +106,7 @@ const EmployeeDashboard = () => {
                   <Link to={`/employee/tickets/${ticket._id}`} className="font-medium hover:underline text-primary">
                     {ticket.ticketId}: {ticket.title}
                   </Link>
-                  <p className="text-sm text-muted-foreground">Status: {ticket.status} | Created: {new Date(ticket.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground">Status: {ticket.status} | Requester: {ticket.requester?.name || '—'} | Created: {new Date(ticket.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
             ))}

@@ -26,8 +26,12 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(formData);
-      toast.success('Registration successful! Please sign in.');
+      const res = await register(formData);
+      if (res.data.user?.status === 'Pending') {
+        toast.success('Registration successful! Your account is pending manager approval.');
+      } else {
+        toast.success('Registration successful! Please sign in.');
+      }
       navigate('/login');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to register');
@@ -38,7 +42,7 @@ const Register = () => {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 dark:bg-background py-10">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center flex flex-col items-center">
           <img src="/logo.png" alt="ServiceDesk Pro" className="h-10 w-auto mix-blend-multiply mb-3" />
           <p className="text-sm text-muted-foreground">Create a new account</p>
@@ -55,7 +59,7 @@ const Register = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="John Doe"
               />
             </div>
@@ -71,7 +75,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="name@example.com"
               />
             </div>
@@ -87,7 +91,7 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="••••••••"
               />
             </div>
@@ -99,7 +103,7 @@ const Register = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="employee">Employee</option>
               <option value="technician">Technician</option>
@@ -116,7 +120,7 @@ const Register = () => {
                 name="organization"
                 value={formData.organization}
                 onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Company Inc."
               />
             </div>
@@ -131,7 +135,7 @@ const Register = () => {
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="IT Support"
               />
             </div>
@@ -146,7 +150,7 @@ const Register = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-full border border-input bg-transparent px-4 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="+1 234 567 8900"
               />
             </div>
@@ -155,7 +159,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           >
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign Up'}
           </button>

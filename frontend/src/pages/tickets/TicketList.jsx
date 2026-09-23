@@ -262,7 +262,7 @@ const TicketList = () => {
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <TableSkeleton columns={isEmployee ? 6 : 7} rows={5} />
+              <TableSkeleton columns={7} rows={5} />
             </motion.div>
           ) : tickets.length === 0 ? (
           <div className="p-10 text-center">
@@ -285,7 +285,7 @@ const TicketList = () => {
                   <th className="px-4 py-3 font-medium">Title</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Priority</th>
-                  {!isEmployee && <th className="px-4 py-3 font-medium">Requester</th>}
+                  <th className="px-4 py-3 font-medium">Requester</th>
                   <th className="px-4 py-3 font-medium">Assigned To</th>
                   <th className="px-4 py-3 font-medium">SLA</th>
                   <th className="px-4 py-3 font-medium">Created</th>
@@ -321,7 +321,7 @@ const TicketList = () => {
                         {ticket.priority}
                       </span>
                     </td>
-                    {!isEmployee && <td className="px-4 py-3 text-muted-foreground">{ticket.requester?.name || '—'}</td>}
+                    <td className="px-4 py-3 text-muted-foreground">{ticket.requester?.name || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{ticket.assignedTo?.name || <span className="italic text-xs">Unassigned</span>}</td>
                     <td className="px-4 py-3">
                       {ticket.slaBreached ? (

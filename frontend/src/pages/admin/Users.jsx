@@ -39,6 +39,26 @@ const AdminUsers = () => {
     u.role.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleApprove = async (userId) => {
+    try {
+      await api.patch(`/users/${userId}`, { status: 'Active' });
+      setUsers(users.map(u => u._id === userId ? { ...u, status: 'Active' } : u));
+      toast.success('User approved successfully');
+    } catch (err) {
+      toast.error('Failed to approve user');
+    }
+  };
+
+  const handleReject = async (userId) => {
+    try {
+      await api.patch(`/users/${userId}`, { status: 'Rejected' });
+      setUsers(users.map(u => u._id === userId ? { ...u, status: 'Rejected' } : u));
+      toast.success('User rejected successfully');
+    } catch (err) {
+      toast.error('Failed to reject user');
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -119,11 +139,21 @@ const AdminUsers = () => {
                       {user.department?.name || '—'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        user.status === 'Active' ? 'bg-green-100 text-green-800' :
+                        user.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-slate-100 text-slate-800'
+                      }`}>
                         {user.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
+                      {user.status === 'Pending' && (
+                        <>
+                          <button onClick={() => handleApprove(user._id)} className="text-green-600 hover:underline text-sm font-medium mr-4">Approve</button>
+                          <button onClick={() => handleReject(user._id)} className="text-red-600 hover:underline text-sm font-medium mr-4">Reject</button>
+                        </>
+                      )}
                       <button className="text-primary hover:underline text-sm font-medium">Edit</button>
                     </td>
                   </AnimatedTableRow>

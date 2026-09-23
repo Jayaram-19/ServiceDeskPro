@@ -1,16 +1,47 @@
-# React + Vite
+# ServiceDesk Pro - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This is the frontend application for ServiceDesk Pro, an AI-powered IT Service Management platform.
 
-Currently, two official plugins are available:
+## Tech Stack
+- **Framework:** React 18 with Vite
+- **Routing:** React Router v6
+- **Styling:** Tailwind CSS
+- **Components:** Radix UI / shadcn/ui inspired
+- **Animations:** Framer Motion & GSAP
+- **Forms:** React Hook Form with Zod validation
+- **Charts:** Recharts
+- **HTTP Client:** Axios
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Getting Started
 
-## React Compiler
+### Prerequisites
+- Node.js (v18+)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Installation
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables (create a `.env` file if needed, defaults to `http://localhost:5173`):
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
 
-## Expanding the Oxlint configuration
+### Running the Development Server
+```bash
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### Building for Production
+```bash
+npm run build
+```
+
+### Linting
+```bash
+npm run lint
+```

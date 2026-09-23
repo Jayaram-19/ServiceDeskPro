@@ -15,8 +15,10 @@ const register = async (req, res, next) => {
 
     // Find or create organization based on string name
     let orgDoc = await Organization.findOne({ name: organization });
+    let isNewOrg = false;
     if (!orgDoc) {
       orgDoc = await Organization.create({ name: organization });
+      isNewOrg = true;
     }
 
     // Find or create department based on string name
@@ -36,6 +38,7 @@ const register = async (req, res, next) => {
       organization: orgDoc._id,
       department: deptDoc ? deptDoc._id : undefined,
       phone,
+      status: isNewOrg ? 'Active' : 'Pending',
     });
 
     await logAction({ action: 'USER_REGISTERED', performedBy: user._id, targetModel: 'User', targetId: user._id, organization: orgDoc._id, req });
@@ -53,6 +56,8 @@ const login = async (req, res, next) => {
 
     const user = await User.findOne({ email }).select('+passwordHash');
     if (!user) return errorResponse(res, 'Invalid credentials', 401);
+    if (user.status === 'Pending') return errorResponse(res, 'Account pending approval from a manager', 403);
+    if (user.status === 'Rejected') return errorResponse(res, 'Your registration was rejected by a manager', 403);
     if (user.status !== 'Active') return errorResponse(res, 'Account is deactivated', 403);
 
     const isMatch = await user.comparePassword(password);
@@ -92,6 +97,8 @@ const refreshToken = async (req, res, next) => {
     const decoded = verifyRefreshToken(token);
     const user = await User.findById(decoded.id).select('+refreshToken');
     if (!user || user.refreshToken !== token) return errorResponse(res, 'Invalid refresh token', 401);
+    if (user.status === 'Pending') return errorResponse(res, 'Account pending approval from a manager', 403);
+    if (user.status === 'Rejected') return errorResponse(res, 'Your registration was rejected by a manager', 403);
     if (user.status !== 'Active') return errorResponse(res, 'Account is deactivated', 403);
 
     const payload = { id: user._id, role: user.role, organization: user.organization };

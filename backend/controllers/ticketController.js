@@ -16,13 +16,11 @@ const getTickets = async (req, res, next) => {
 
     let query = { organization };
 
-    // Role-based filtering
-    if (role === 'employee') {
-      query.requester = userId;
-    } else if (role === 'technician') {
-      query.assignedTo = userId;
+    // Role-based filtering removed to allow organization-wide visibility for all users
+    if (role === 'technician') {
+      // Technicians still only see assigned tickets by default in their specific views, 
+      // but query allows seeing all if needed. Actually let's not restrict the base query.
     }
-    // manager, admin, asset_manager see all
 
     if (status) query.status = status;
     if (priority) query.priority = priority;
@@ -142,14 +140,7 @@ const getTicketById = async (req, res, next) => {
 
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
 
-    // Employee can only see their own tickets
-    if (role === 'employee' && ticket.requester._id.toString() !== userId.toString()) {
-      return errorResponse(res, 'Forbidden', 403);
-    }
-    // Technician can only see their assigned tickets
-    if (role === 'technician' && ticket.assignedTo?._id.toString() !== userId.toString()) {
-      return errorResponse(res, 'Forbidden', 403);
-    }
+    // Employee and technician restrictions removed to allow organization-wide visibility
 
     return successResponse(res, { ticket });
   } catch (err) {

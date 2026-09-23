@@ -20,10 +20,8 @@ const getAssets = async (req, res, next) => {
       { assetId: { $regex: search, $options: 'i' } },
     ];
 
-    // Employees only see their own assigned assets
-    if (role === 'employee') {
-      query.assignedTo = userId;
-    } else if (assignedTo) {
+    // Role-based filtering removed to allow organization-wide visibility
+    if (assignedTo) {
       query.assignedTo = assignedTo;
     }
 

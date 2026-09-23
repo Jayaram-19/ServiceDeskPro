@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
     phone: { type: String, trim: true },
     avatar: { type: String },
-    status: { type: String, enum: ['Active', 'Inactive', 'Suspended'], default: 'Active' },
+    status: { type: String, enum: ['Pending', 'Active', 'Inactive', 'Suspended', 'Rejected'], default: 'Active' },
     refreshToken: { type: String, select: false },
     lastLogin: { type: Date },
     // For technicians
