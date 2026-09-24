@@ -67,7 +67,7 @@ const AdminDashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.tickets || []}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="_id" />
+                <XAxis dataKey="_id" interval={0} tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} />
                 <Tooltip 
                   cursor={{ fill: '#eadcca', opacity: 0.5 }}
