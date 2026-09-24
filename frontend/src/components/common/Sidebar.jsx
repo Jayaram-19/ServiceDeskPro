@@ -71,7 +71,16 @@ const Sidebar = ({ role }) => {
   const NavContent = ({ onNavigate }) => (
     <>
       <div className="flex h-16 items-center justify-center border-b border-border px-6 shrink-0 py-2">
-        <Link to="/" className="flex items-center justify-center h-full w-full hover:opacity-80 transition-opacity">
+        <Link to={(() => {
+          const basePath = {
+            admin: '/admin',
+            manager: '/manager',
+            technician: '/technician',
+            asset_manager: '/assets-dash',
+            employee: '/employee',
+          }[role] || '/employee';
+          return basePath;
+        })()} className="flex items-center justify-center h-full w-full hover:opacity-80 transition-opacity">
           <img src="/logo.png" alt="ServiceDesk Pro" className="h-8 w-auto object-contain mix-blend-multiply" />
         </Link>
       </div>

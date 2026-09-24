@@ -71,7 +71,11 @@ const AdminDashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="_id" />
                 <YAxis allowDecimals={false} />
-                <Tooltip itemStyle={{ color: '#6b4226' }} />
+                <Tooltip 
+                  cursor={{ fill: '#eadcca', opacity: 0.5 }}
+                  contentStyle={{ backgroundColor: '#fffaf2', borderColor: '#d9c1a4', color: '#6b4226', borderRadius: '8px' }}
+                  itemStyle={{ color: '#6b4226' }} 
+                />
                 <Bar dataKey="count" fill="#6b4226" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

@@ -29,7 +29,13 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await login(formData.email, formData.password);
-      toast.success('Login successful!');
+      toast('Login successful!', {
+        icon: null,
+        style: {
+          background: '#eadcca',
+          color: '#6b4226',
+        },
+      });
       navigate(getDashboardPath(data.user.role), { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to login');
