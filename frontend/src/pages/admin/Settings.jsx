@@ -23,7 +23,7 @@ const AdminSettings = () => {
           api.get('/admin/sla-policies')
         ]);
         setCategories(catRes.data.categories || []);
-        setSlas(catRes.data.policies || []);
+        setSlas(slaRes.data.policies || []);
       } catch (err) {
         toast.error('Failed to load settings');
       } finally {

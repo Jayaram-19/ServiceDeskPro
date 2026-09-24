@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Loader2, Ticket, CheckCircle2, Clock, Users } from 'lucide-react';
+import { Ticket, CheckCircle2, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StaggerContainer, AnimatedListItem } from '../../components/motion/StaggerContainer';
 import { Skeleton } from '../../components/motion/SkeletonLoader';
-import { motion } from 'framer-motion';
-import gsap from 'gsap';
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null);

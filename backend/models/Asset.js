@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const maintenanceRecordSchema = new mongoose.Schema({
   type: { type: String, enum: ['Repair', 'Upgrade', 'Maintenance', 'Replacement'], required: true },
@@ -21,7 +22,7 @@ const assetHistorySchema = new mongoose.Schema({
 
 const assetSchema = new mongoose.Schema(
   {
-    assetId: { type: String, unique: true },
+    assetId: { type: String, unique: true, default: () => `AST-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` },
     name: { type: String, required: true, trim: true },
     assetType: {
       type: String,
@@ -75,15 +76,5 @@ assetSchema.index({ organization: 1, status: 1 });
 assetSchema.index({ assignedTo: 1 });
 assetSchema.index({ serialNumber: 1 });
 assetSchema.index({ warrantyExpiresAt: 1 });
-// assetId is already indexed via unique:true above
-
-// Auto-generate assetId
-assetSchema.pre('save', async function (next) {
-  if (!this.assetId) {
-    const count = await mongoose.model('Asset').countDocuments({ organization: this.organization });
-    this.assetId = `AST-${String(count + 1).padStart(5, '0')}`;
-  }
-  next();
-});
 
 module.exports = mongoose.model('Asset', assetSchema);

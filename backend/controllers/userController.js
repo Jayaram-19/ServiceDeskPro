@@ -46,11 +46,15 @@ const getUserById = async (req, res, next) => {
 // PATCH /api/users/:id
 const updateUser = async (req, res, next) => {
   try {
-    const { _id: actorId, organization } = req.user;
+    const { _id: actorId, organization, role: actorRole } = req.user;
     const { name, phone, department, role, status, avatar, skills, maxTickets } = req.body;
 
     const user = await User.findOne({ _id: req.params.id, organization });
     if (!user) return errorResponse(res, 'User not found', 404);
+
+    if (actorRole !== 'admin' && (role !== undefined || status !== undefined)) {
+      return errorResponse(res, 'Only administrators can change roles or account status', 403);
+    }
 
     if (name) user.name = name;
     if (phone) user.phone = phone;
@@ -59,7 +63,7 @@ const updateUser = async (req, res, next) => {
     if (status) user.status = status;
     if (avatar) user.avatar = avatar;
     if (skills) user.skills = skills;
-    if (maxTickets) user.maxTickets = maxTickets;
+    if (maxTickets !== undefined) user.maxTickets = maxTickets;
 
     await user.save();
 

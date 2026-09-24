@@ -5,7 +5,9 @@ const { successResponse } = require('../utils/apiResponse');
 const toCSV = (rows, headers) => {
   const escape = (v) => {
     if (v === null || v === undefined) return '';
-    const s = String(v).replace(/"/g, '""');
+    let s = String(v).replace(/"/g, '""');
+    // Prevent spreadsheet applications from interpreting exported user content as formulas.
+    if (/^[=+\-@]/.test(s)) s = `'${s}`;
     return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
   };
   const headerRow = headers.map(h => h.label).join(',');

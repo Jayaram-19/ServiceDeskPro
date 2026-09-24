@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Loader2, MessageSquare, Clock, AlertTriangle, CheckCircle2,
-  ArrowLeft, User, Tag, Building, Zap, ChevronDown, Send
+  ArrowLeft, User, Tag, Building, Zap, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
-import { Skeleton, CardSkeleton } from '../../components/motion/SkeletonLoader';
+import { Skeleton } from '../../components/motion/SkeletonLoader';
 
 const getBasePath = (pathname) => '/' + pathname.split('/')[1];
 
@@ -42,7 +42,6 @@ const ALLOWED_TRANSITIONS = {
 const TicketDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const basePath = getBasePath(location.pathname);
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Loader2, Search, Plus, Laptop, Server, Smartphone, Key, Monitor, Wifi, HardDrive, Tag } from 'lucide-react';
+import { Search, Plus, Laptop, Server, Smartphone, Key, Monitor, Wifi, HardDrive, Tag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { StaggerContainer, AnimatedTableRow } from '../../components/motion/StaggerContainer';

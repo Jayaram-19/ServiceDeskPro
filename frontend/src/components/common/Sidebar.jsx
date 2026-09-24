@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { 
   LayoutDashboard, 
@@ -10,8 +10,7 @@ import {
   Users, 
   Settings,
   BarChart3,
-  Menu,
-  X
+  Menu
 } from 'lucide-react';
 import SlideOverDrawer from '../motion/SlideOverDrawer';
 

@@ -7,20 +7,13 @@ const { applySLAPolicy } = require('../services/slaService');
 const { classifyTicket, recommendArticles } = require('../services/aiService');
 const { logAction } = require('../services/auditService');
 const { notifyTicketAssigned, notifyStatusChanged, notifyTicketResolved } = require('../services/notificationService');
+const { isPrivileged, ownsTicket, ticketScope } = require('../utils/accessControl');
 
 // GET /api/tickets
 const getTickets = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, priority, category, assignedTo, department, search, slaStatus, startDate, endDate } = req.query;
-    const { role, organization, _id: userId, department: userDept } = req.user;
-
-    let query = { organization };
-
-    // Role-based filtering removed to allow organization-wide visibility for all users
-    if (role === 'technician') {
-      // Technicians still only see assigned tickets by default in their specific views, 
-      // but query allows seeing all if needed. Actually let's not restrict the base query.
-    }
+    let query = ticketScope(req.user);
 
     if (status) query.status = status;
     if (priority) query.priority = priority;
@@ -128,8 +121,7 @@ const createTicket = async (req, res, next) => {
 // GET /api/tickets/:id
 const getTicketById = async (req, res, next) => {
   try {
-    const { role, _id: userId, organization } = req.user;
-    const ticket = await Ticket.findOne({ _id: req.params.id, organization })
+    const ticket = await Ticket.findOne({ _id: req.params.id, ...ticketScope(req.user) })
       .populate('requester', 'name email avatar department phone')
       .populate('assignedTo', 'name email avatar phone')
       .populate('category', 'name icon')
@@ -139,8 +131,6 @@ const getTicketById = async (req, res, next) => {
       .populate('history.performedBy', 'name role');
 
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
-
-    // Employee and technician restrictions removed to allow organization-wide visibility
 
     return successResponse(res, { ticket });
   } catch (err) {
@@ -156,6 +146,17 @@ const updateTicket = async (req, res, next) => {
 
     const ticket = await Ticket.findOne({ _id: req.params.id, organization });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
+    if (!ownsTicket(ticket, req.user)) return errorResponse(res, 'Forbidden', 403);
+
+    if (!isPrivileged(role) && (priority || assignedTo !== undefined || category || department)) {
+      return errorResponse(res, 'Only managers can change ticket routing or priority', 403);
+    }
+    if (role === 'employee' && (status || resolution)) {
+      return errorResponse(res, 'Use the reopen action for your resolved ticket', 403);
+    }
+    if (status === TICKET_STATUSES.RESOLVED) {
+      return errorResponse(res, 'Use the resolve action and provide a resolution note', 400);
+    }
 
     const historyEntries = [];
 
@@ -165,19 +166,13 @@ const updateTicket = async (req, res, next) => {
         return errorResponse(res, `Invalid status transition: ${ticket.status} → ${status}`, 400);
       }
       // Role checks for specific transitions
-      if (status === TICKET_STATUSES.CLOSED && role === 'employee') {
-        return errorResponse(res, 'Employees cannot close tickets directly', 403);
-      }
+      if (status === TICKET_STATUSES.CLOSED && !isPrivileged(role)) return errorResponse(res, 'Only managers can close tickets', 403);
       if (status === TICKET_STATUSES.CANCELLED && !['admin', 'manager'].includes(role)) {
         return errorResponse(res, 'Only admins and managers can cancel tickets', 403);
       }
 
       historyEntries.push({ action: 'Status Changed', performedBy: userId, oldValue: ticket.status, newValue: status });
 
-      if (status === TICKET_STATUSES.RESOLVED) {
-        ticket.resolution = { note: resolution, resolvedBy: userId, resolvedAt: new Date() };
-        await notifyTicketResolved(ticket, ticket.requester);
-      }
       if (status === TICKET_STATUSES.CLOSED) ticket.closedAt = new Date();
       if (status === TICKET_STATUSES.REOPENED) ticket.reopenedAt = new Date();
       if (status === TICKET_STATUSES.CANCELLED) ticket.cancelledAt = new Date();
@@ -196,7 +191,7 @@ const updateTicket = async (req, res, next) => {
       historyEntries.push({ action: 'Priority Changed', performedBy: userId, oldValue: ticket.priority, newValue: priority });
       ticket.priority = priority;
       // Re-calculate SLA
-      ticket = await applySLAPolicy(ticket);
+      await applySLAPolicy(ticket);
     }
 
     // Assignment (manager/admin only)
@@ -213,8 +208,8 @@ const updateTicket = async (req, res, next) => {
       await notifyTicketAssigned(ticket, tech);
     }
 
-    if (title && role !== 'employee') ticket.title = title;
-    if (description && role !== 'employee') ticket.description = description;
+    if (title) ticket.title = title;
+    if (description) ticket.description = description;
     if (category) ticket.category = category;
     if (department) ticket.department = department;
 
@@ -247,6 +242,9 @@ const assignTicket = async (req, res, next) => {
     const tech = await User.findOne({ _id: assignedTo, organization, role: { $in: ['technician', 'manager'] } });
     if (!tech) return errorResponse(res, 'Technician not found', 404);
 
+    if (!isValidTransition(ticket.status, TICKET_STATUSES.ASSIGNED) && ticket.status !== TICKET_STATUSES.ASSIGNED) {
+      return errorResponse(res, `Cannot assign ticket with status "${ticket.status}"`, 400);
+    }
     const oldAssignee = ticket.assignedTo;
     ticket.assignedTo = assignedTo;
     ticket.status = TICKET_STATUSES.ASSIGNED;
@@ -274,6 +272,9 @@ const resolveTicket = async (req, res, next) => {
 
     const ticket = await Ticket.findOne({ _id: req.params.id, organization });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
+    if (role === 'technician' && ticket.assignedTo?.toString() !== userId.toString()) {
+      return errorResponse(res, 'Technicians can resolve only their assigned tickets', 403);
+    }
     if (!isValidTransition(ticket.status, TICKET_STATUSES.RESOLVED)) {
       return errorResponse(res, `Cannot resolve ticket with status "${ticket.status}"`, 400);
     }
@@ -301,6 +302,9 @@ const reopenTicket = async (req, res, next) => {
 
     const ticket = await Ticket.findOne({ _id: req.params.id, organization });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
+    if (!isPrivileged(role) && ticket.requester.toString() !== userId.toString()) {
+      return errorResponse(res, 'Only the requester or a manager can reopen this ticket', 403);
+    }
     if (!isValidTransition(ticket.status, TICKET_STATUSES.REOPENED)) {
       return errorResponse(res, `Cannot reopen ticket with status "${ticket.status}"`, 400);
     }

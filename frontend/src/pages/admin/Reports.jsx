@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Loader2, Download, BarChart3, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Download, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StaggerContainer, AnimatedListItem } from '../../components/motion/StaggerContainer';
-import { Skeleton, CardSkeleton } from '../../components/motion/SkeletonLoader';
+import { CardSkeleton } from '../../components/motion/SkeletonLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminReports = () => {

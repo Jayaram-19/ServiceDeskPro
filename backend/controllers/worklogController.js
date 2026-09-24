@@ -1,6 +1,7 @@
 const WorkLog = require('../models/WorkLog');
 const Ticket = require('../models/Ticket');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+const { ownsTicket, ticketScope } = require('../utils/accessControl');
 
 // POST /api/tickets/:id/worklogs
 const addWorkLog = async (req, res, next) => {
@@ -10,6 +11,9 @@ const addWorkLog = async (req, res, next) => {
 
     const ticket = await Ticket.findOne({ _id: req.params.id, organization });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
+    if (req.user.role === 'technician' && ticket.assignedTo?.toString() !== userId.toString()) {
+      return errorResponse(res, 'Technicians can log work only on assigned tickets', 403);
+    }
 
     const workLog = await WorkLog.create({
       ticket: ticket._id,
@@ -32,8 +36,7 @@ const addWorkLog = async (req, res, next) => {
 // GET /api/tickets/:id/worklogs
 const getWorkLogs = async (req, res, next) => {
   try {
-    const { organization } = req.user;
-    const ticket = await Ticket.findOne({ _id: req.params.id, organization });
+    const ticket = await Ticket.findOne({ _id: req.params.id, ...ticketScope(req.user) });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
 
     const logs = await WorkLog.find({ ticket: req.params.id })

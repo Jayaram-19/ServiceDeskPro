@@ -11,6 +11,11 @@ const connectDB = require('./config/db');
 const corsOptions = require('./config/corsOptions');
 const errorHandler = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
+const { authenticate } = require('./middleware/authMiddleware');
+const { UPLOAD_PATH } = require('./middleware/uploadMiddleware');
+const Ticket = require('./models/Ticket');
+const Comment = require('./models/Comment');
+const { ownsTicket } = require('./utils/accessControl');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -49,8 +54,30 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve attachments only to users who can access their parent ticket. Keeping
+// uploads outside an unauthenticated static directory prevents URL sharing.
+app.get('/uploads/:filename', authenticate, async (req, res, next) => {
+  try {
+    const filename = path.basename(req.params.filename);
+    if (filename !== req.params.filename) return res.status(400).json({ success: false, message: 'Invalid file name' });
+
+    let ticket = await Ticket.findOne({ organization: req.user.organization, 'attachments.filename': filename });
+    let internalComment = false;
+    if (!ticket) {
+      const comment = await Comment.findOne({ 'attachments.filename': filename });
+      if (comment) {
+        ticket = await Ticket.findOne({ _id: comment.ticket, organization: req.user.organization });
+        internalComment = comment.isInternal;
+      }
+    }
+    if (!ticket || !ownsTicket(ticket, req.user) || (internalComment && !['admin', 'manager', 'technician'].includes(req.user.role))) {
+      return res.status(404).json({ success: false, message: 'Attachment not found' });
+    }
+    return res.sendFile(filename, { root: UPLOAD_PATH });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

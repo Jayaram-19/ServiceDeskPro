@@ -43,8 +43,10 @@ const createArticle = async (req, res, next) => {
 // GET /api/knowledge/:id
 const getArticleById = async (req, res, next) => {
   try {
-    const { organization } = req.user;
-    const article = await KnowledgeArticle.findOne({ _id: req.params.id, organization })
+    const { organization, role } = req.user;
+    const query = { _id: req.params.id, organization };
+    if (!['admin', 'manager', 'technician'].includes(role)) query.status = 'Published';
+    const article = await KnowledgeArticle.findOne(query)
       .populate('author', 'name email avatar')
       .populate('category', 'name');
 
@@ -63,10 +65,13 @@ const getArticleById = async (req, res, next) => {
 // PATCH /api/knowledge/:id
 const updateArticle = async (req, res, next) => {
   try {
-    const { organization } = req.user;
+    const { organization, role, _id: userId } = req.user;
+    const query = { _id: req.params.id, organization };
+    if (!['admin', 'manager'].includes(role)) query.author = userId;
+    const { organization: ignoredOrganization, author: ignoredAuthor, ...updates } = req.body;
     const article = await KnowledgeArticle.findOneAndUpdate(
-      { _id: req.params.id, organization },
-      req.body,
+      query,
+      updates,
       { new: true, runValidators: true }
     );
     if (!article) return errorResponse(res, 'Article not found', 404);

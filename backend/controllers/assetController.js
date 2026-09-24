@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { successResponse, errorResponse, paginatedResponse } = require('../utils/apiResponse');
 const { logAction } = require('../services/auditService');
 const { notifyAssetAssigned } = require('../services/notificationService');
+const { assetScope } = require('../utils/accessControl');
 
 // GET /api/assets
 const getAssets = async (req, res, next) => {
@@ -10,7 +11,7 @@ const getAssets = async (req, res, next) => {
     const { page = 1, limit = 20, status, assetType, assignedTo, search, department } = req.query;
     const { organization, role, _id: userId } = req.user;
 
-    let query = { organization };
+    let query = assetScope(req.user);
     if (status) query.status = status;
     if (assetType) query.assetType = assetType;
     if (department) query.department = department;
@@ -20,7 +21,6 @@ const getAssets = async (req, res, next) => {
       { assetId: { $regex: search, $options: 'i' } },
     ];
 
-    // Role-based filtering removed to allow organization-wide visibility
     if (assignedTo) {
       query.assignedTo = assignedTo;
     }
@@ -59,7 +59,7 @@ const createAsset = async (req, res, next) => {
 const getAssetById = async (req, res, next) => {
   try {
     const { organization } = req.user;
-    const asset = await Asset.findOne({ _id: req.params.id, organization })
+    const asset = await Asset.findOne({ _id: req.params.id, ...assetScope(req.user) })
       .populate('assignedTo', 'name email avatar department')
       .populate('department', 'name')
       .populate('vendor', 'name email phone website')
@@ -79,13 +79,17 @@ const updateAsset = async (req, res, next) => {
     const asset = await Asset.findOne({ _id: req.params.id, organization });
     if (!asset) return errorResponse(res, 'Asset not found', 404);
 
-    const { assignedTo, status, maintenanceRecord, ...rest } = req.body;
+    const {
+      assignedTo, status, maintenanceRecord,
+      organization: ignoredOrganization, assetId: ignoredAssetId, history: ignoredHistory,
+      ...rest
+    } = req.body;
 
     // Handle assignment
     if (assignedTo !== undefined) {
       const oldAssignee = asset.assignedTo;
       if (assignedTo) {
-        const user = await User.findById(assignedTo);
+        const user = await User.findOne({ _id: assignedTo, organization });
         if (!user) return errorResponse(res, 'User not found', 404);
         asset.assignedTo = assignedTo;
         asset.status = 'Assigned';

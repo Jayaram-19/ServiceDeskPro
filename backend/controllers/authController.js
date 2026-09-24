@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Organization = require('../models/Organization');
 const Department = require('../models/Department');
+const bcrypt = require('bcryptjs');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/tokenUtils');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAction } = require('../services/auditService');
@@ -8,7 +9,7 @@ const { logAction } = require('../services/auditService');
 // POST /api/auth/register
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, organization, department, phone } = req.body;
+    const { name, email, password, organization, department, phone } = req.body;
 
     const exists = await User.findOne({ email });
     if (exists) return errorResponse(res, 'Email already registered', 409);
@@ -34,7 +35,7 @@ const register = async (req, res, next) => {
       name,
       email,
       passwordHash: password, // pre-save hook hashes it
-      role: role || 'employee',
+      role: isNewOrg ? 'admin' : 'employee',
       organization: orgDoc._id,
       department: deptDoc ? deptDoc._id : undefined,
       phone,
@@ -67,8 +68,8 @@ const login = async (req, res, next) => {
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
-    // Store refresh token hash
-    user.refreshToken = refreshToken;
+    // Store only a hash; a database leak must not yield reusable sessions.
+    user.refreshToken = await bcrypt.hash(refreshToken, 12);
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
@@ -96,7 +97,9 @@ const refreshToken = async (req, res, next) => {
 
     const decoded = verifyRefreshToken(token);
     const user = await User.findById(decoded.id).select('+refreshToken');
-    if (!user || user.refreshToken !== token) return errorResponse(res, 'Invalid refresh token', 401);
+    if (!user || !user.refreshToken || !(await bcrypt.compare(token, user.refreshToken))) {
+      return errorResponse(res, 'Invalid refresh token', 401);
+    }
     if (user.status === 'Pending') return errorResponse(res, 'Account pending approval from a manager', 403);
     if (user.status === 'Rejected') return errorResponse(res, 'Your registration was rejected by a manager', 403);
     if (user.status !== 'Active') return errorResponse(res, 'Account is deactivated', 403);
@@ -105,7 +108,7 @@ const refreshToken = async (req, res, next) => {
     const newAccessToken = generateAccessToken(payload);
     const newRefreshToken = generateRefreshToken(payload);
 
-    user.refreshToken = newRefreshToken;
+    user.refreshToken = await bcrypt.hash(newRefreshToken, 12);
     await user.save({ validateBeforeSave: false });
 
     res.cookie('refreshToken', newRefreshToken, {

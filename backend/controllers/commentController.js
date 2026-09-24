@@ -2,6 +2,7 @@ const Comment = require('../models/Comment');
 const Ticket = require('../models/Ticket');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { notifyNewComment } = require('../services/notificationService');
+const { ticketScope } = require('../utils/accessControl');
 
 // POST /api/tickets/:id/comments
 const addComment = async (req, res, next) => {
@@ -9,11 +10,12 @@ const addComment = async (req, res, next) => {
     const { message, isInternal } = req.body;
     const { _id: userId, role, organization } = req.user;
 
-    const ticket = await Ticket.findOne({ _id: req.params.id, organization });
+    const ticket = await Ticket.findOne({ _id: req.params.id, ...ticketScope(req.user) });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
 
     // Employees cannot post internal notes
-    if (isInternal && role === 'employee') {
+    const internal = isInternal === 'true' || isInternal === true;
+    if (internal && !['admin', 'manager', 'technician'].includes(role)) {
       return errorResponse(res, 'Employees cannot post internal notes', 403);
     }
 
@@ -29,7 +31,7 @@ const addComment = async (req, res, next) => {
       ticket: ticket._id,
       author: userId,
       message,
-      isInternal: isInternal === 'true' || isInternal === true,
+      isInternal: internal,
       attachments,
     });
 
@@ -46,7 +48,7 @@ const addComment = async (req, res, next) => {
     }
 
     // Record in ticket history
-    ticket.history.push({ action: isInternal ? 'Internal Note Added' : 'Comment Added', performedBy: userId });
+    ticket.history.push({ action: internal ? 'Internal Note Added' : 'Comment Added', performedBy: userId });
     await ticket.save();
 
     return successResponse(res, { comment: populated }, 'Comment added', 201);
@@ -60,7 +62,7 @@ const getComments = async (req, res, next) => {
   try {
     const { role, _id: userId, organization } = req.user;
 
-    const ticket = await Ticket.findOne({ _id: req.params.id, organization });
+    const ticket = await Ticket.findOne({ _id: req.params.id, ...ticketScope(req.user) });
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
 
     let query = { ticket: req.params.id };

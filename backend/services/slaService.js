@@ -121,8 +121,10 @@ const checkSLAStatus = async () => {
 
       } else if (!ticket.slaBreached && percentConsumed >= (policy.escalation?.warnAtPercent || 80)) {
         // SLA Warning — only fire once (no flag for this, skip if already escalated)
-        if (!ticket.slaEscalated) {
+        if (!ticket.slaWarningSent) {
           if (ticket.assignedTo) await notifySLAWarning(ticket, ticket.assignedTo._id);
+          ticket.slaWarningSent = true;
+          await ticket.save();
         }
       }
     }

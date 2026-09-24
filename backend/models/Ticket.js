@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const { TICKET_STATUSES } = require('../utils/ticketStateMachine');
 
 const attachmentSchema = new mongoose.Schema({
@@ -22,7 +23,7 @@ const historyEntrySchema = new mongoose.Schema({
 
 const ticketSchema = new mongoose.Schema(
   {
-    ticketId: { type: String, unique: true },
+    ticketId: { type: String, unique: true, default: () => `TKT-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, required: true, maxlength: 5000 },
     requester: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -48,6 +49,7 @@ const ticketSchema = new mongoose.Schema(
     slaBreached: { type: Boolean, default: false },
     slaResponseBreached: { type: Boolean, default: false },
     slaEscalated: { type: Boolean, default: false },
+    slaWarningSent: { type: Boolean, default: false },
     firstResponseAt: { type: Date },
 
     // AI Classification
@@ -92,16 +94,6 @@ ticketSchema.index({ requester: 1 });
 ticketSchema.index({ assignedTo: 1, status: 1 });
 ticketSchema.index({ slaDeadline: 1, slaBreached: 1 });
 ticketSchema.index({ priority: 1, status: 1 });
-// ticketId is already indexed via unique:true above
 ticketSchema.index({ title: 'text', description: 'text' });
-
-// Auto-generate ticketId
-ticketSchema.pre('save', async function (next) {
-  if (!this.ticketId) {
-    const count = await mongoose.model('Ticket').countDocuments({ organization: this.organization });
-    this.ticketId = `TKT-${String(count + 1).padStart(5, '0')}`;
-  }
-  next();
-});
 
 module.exports = mongoose.model('Ticket', ticketSchema);

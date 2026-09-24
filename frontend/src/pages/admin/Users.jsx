@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Loader2, Search, Plus, UserCircle } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StaggerContainer, AnimatedTableRow } from '../../components/motion/StaggerContainer';
 import { TableSkeleton } from '../../components/motion/SkeletonLoader';

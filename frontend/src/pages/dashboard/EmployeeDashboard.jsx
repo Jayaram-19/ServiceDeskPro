@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Loader2, Ticket, CheckCircle2 } from 'lucide-react';
+import { Ticket, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StaggerContainer, AnimatedListItem } from '../../components/motion/StaggerContainer';
-import { Skeleton, CardSkeleton } from '../../components/motion/SkeletonLoader';
+import { Skeleton } from '../../components/motion/SkeletonLoader';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 

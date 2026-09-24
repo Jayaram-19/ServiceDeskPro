@@ -25,9 +25,10 @@ router.post('/categories', authorize('admin', 'manager'), async (req, res, next)
 
 router.patch('/categories/:id', authorize('admin', 'manager'), async (req, res, next) => {
   try {
+    const { organization: ignoredOrganization, ...updates } = req.body;
     const cat = await Category.findOneAndUpdate(
       { _id: req.params.id, organization: req.user.organization },
-      req.body, { new: true }
+      updates, { new: true, runValidators: true }
     );
     if (!cat) return errorResponse(res, 'Category not found', 404);
     return successResponse(res, { category: cat }, 'Category updated');
@@ -58,9 +59,10 @@ router.post('/sla-policies', authorize('admin', 'manager'), async (req, res, nex
 
 router.patch('/sla-policies/:id', authorize('admin', 'manager'), async (req, res, next) => {
   try {
+    const { organization: ignoredOrganization, ...updates } = req.body;
     const policy = await SLAPolicy.findOneAndUpdate(
       { _id: req.params.id, organization: req.user.organization },
-      req.body, { new: true }
+      updates, { new: true, runValidators: true }
     );
     if (!policy) return errorResponse(res, 'Policy not found', 404);
     return successResponse(res, { policy }, 'SLA policy updated');
@@ -107,9 +109,10 @@ router.post('/vendors', authorize('admin', 'asset_manager'), async (req, res, ne
 
 router.patch('/vendors/:id', authorize('admin', 'asset_manager'), async (req, res, next) => {
   try {
+    const { organization: ignoredOrganization, ...updates } = req.body;
     const vendor = await Vendor.findOneAndUpdate(
       { _id: req.params.id, organization: req.user.organization },
-      req.body, { new: true }
+      updates, { new: true, runValidators: true }
     );
     if (!vendor) return errorResponse(res, 'Vendor not found', 404);
     return successResponse(res, { vendor }, 'Vendor updated');

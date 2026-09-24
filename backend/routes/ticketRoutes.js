@@ -8,7 +8,7 @@ const { addComment, getComments } = require('../controllers/commentController');
 const { addWorkLog, getWorkLogs } = require('../controllers/worklogController');
 const { authenticate } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 
 router.use(authenticate);
 

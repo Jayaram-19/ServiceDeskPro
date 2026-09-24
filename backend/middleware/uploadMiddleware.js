@@ -13,15 +13,15 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-const MAX_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB
+const MAX_SIZE = parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024; // 10MB
+const UPLOAD_PATH = path.resolve(process.env.UPLOAD_PATH || path.join(__dirname, '../uploads'));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = process.env.UPLOAD_PATH || './uploads';
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
+    if (!fs.existsSync(UPLOAD_PATH)) {
+      fs.mkdirSync(UPLOAD_PATH, { recursive: true });
     }
-    cb(null, uploadPath);
+    cb(null, UPLOAD_PATH);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -43,4 +43,4 @@ const upload = multer({
   limits: { fileSize: MAX_SIZE },
 });
 
-module.exports = upload;
+module.exports = { upload, UPLOAD_PATH };

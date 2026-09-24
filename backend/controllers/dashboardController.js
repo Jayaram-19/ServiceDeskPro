@@ -102,8 +102,8 @@ const getEmployeeDashboard = async (req, res, next) => {
       Ticket.countDocuments({ organization, status: { $in: ['Open', 'Assigned', 'In Progress'] } }),
       Ticket.countDocuments({ organization, status: 'Pending' }),
       Ticket.countDocuments({ organization, status: { $in: ['Resolved', 'Closed'] } }),
-      Asset.find({ organization }).populate('department', 'name').limit(5),
-      Ticket.find({ organization }).sort({ createdAt: -1 }).limit(5)
+      Asset.find({ organization, assignedTo: userId }).populate('department', 'name').limit(5),
+      Ticket.find({ organization, requester: userId }).sort({ createdAt: -1 }).limit(5)
         .populate('category', 'name').populate('assignedTo', 'name avatar').populate('requester', 'name'),
     ]);
 
