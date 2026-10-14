@@ -1,5 +1,4 @@
 import { useReducedMotion } from 'framer-motion';
-
 // --- Easings ---
 export const easings = {
   // Snappy but smooth, good for general UI elements
@@ -11,16 +10,12 @@ export const easings = {
   // Slow out, fast in (acceleration)
   accelerate: [0.4, 0.0, 1, 1],
 };
-
-// --- Durations ---
+// --- Durations --- 
 export const durations = {
   fast: 0.15,
   normal: 0.22,
   slow: 0.35,
 };
-
-// --- Framer Motion Variants ---
-
 /**
  * Standard page transition (fade in + slight slide up)
  */

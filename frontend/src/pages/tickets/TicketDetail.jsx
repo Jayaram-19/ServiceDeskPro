@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Loader2, MessageSquare, Clock, AlertTriangle, CheckCircle2,
-  ArrowLeft, User, Tag, Building, Zap, Send
+  ArrowLeft, User, Tag, Building, Zap, Send, X, RotateCcw, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
@@ -52,6 +52,16 @@ const TicketDetail = () => {
   const [isInternal, setIsInternal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [technicians, setTechnicians] = useState([]);
+  
+  // Resolve modal state
+  const [resolveModalOpen, setResolveModalOpen] = useState(false);
+  const [resolutionNote, setResolutionNote] = useState('');
+  const [resolving, setResolving] = useState(false);
+
+  // Reopen modal state
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [reopening, setReopening] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -109,12 +119,63 @@ const TicketDetail = () => {
   };
 
   const handleStatusChange = async (newStatus) => {
+    if (newStatus === 'Resolved') {
+      setResolveModalOpen(true);
+      return;
+    }
+    if (newStatus === 'Reopened') {
+      setReopenModalOpen(true);
+      return;
+    }
+
     try {
       const res = await api.patch(`/tickets/${id}`, { status: newStatus });
       setTicket(res.data.ticket);
       toast.success(`Status updated to ${newStatus}`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update status');
+    }
+  };
+
+  const handleResolveTicket = async (e) => {
+    e?.preventDefault();
+    if (!resolutionNote.trim()) {
+      toast.error('Please provide a resolution note');
+      return;
+    }
+    setResolving(true);
+    try {
+      const res = await api.post(`/tickets/${id}/resolve`, { resolution: resolutionNote.trim() });
+      setTicket(res.data.ticket);
+      setResolveModalOpen(false);
+      setResolutionNote('');
+      toast.success('Ticket marked as Resolved');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resolve ticket');
+    } finally {
+      setResolving(false);
+    }
+  };
+
+  const handleReopenTicket = async (e) => {
+    e?.preventDefault();
+    if (!reopenReason.trim()) {
+      toast.error('Please provide a reason for reopening');
+      return;
+    }
+    setReopening(true);
+    try {
+      const res = await api.post(`/tickets/${id}/reopen`, { reason: reopenReason.trim() });
+      setTicket(res.data.ticket);
+      setReopenModalOpen(false);
+      setReopenReason('');
+      toast.success('Ticket reopened');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reopen ticket');
+    } finally {
+      setReopening(false);
     }
   };
 
@@ -198,17 +259,42 @@ const TicketDetail = () => {
             <button
               key={s}
               onClick={() => handleStatusChange(s)}
-              className={`inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium border transition-colors hover:opacity-80 ${STATUS_COLORS[s] || 'border-input bg-secondary'}`}
+              className={`inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium border transition-colors hover:opacity-80 shadow-sm ${STATUS_COLORS[s] || 'border-input bg-secondary'}`}
             >
-              → {s}
+              {s === 'Resolved' ? '✓ Resolve Ticket' : s === 'Reopened' ? '↺ Reopen Ticket' : `→ ${s}`}
             </button>
           ))}
         </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Description + Comments */}
+        {/* Left: Description + Resolution + Comments */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Resolution Details Card (if resolved/has note) */}
+          {ticket.resolution?.note && (
+            <div className="gsap-reveal rounded-xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm p-6 space-y-3">
+              <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+                <h3 className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2 text-base">
+                  <CheckCircle2 className="h-5 w-5" /> Resolution Note
+                </h3>
+                {ticket.resolution.resolvedAt && (
+                  <span className="text-xs text-muted-foreground">
+                    Resolved {new Date(ticket.resolution.resolvedAt).toLocaleString()}
+                  </span>
+                )}
+              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90 bg-background/60 p-3.5 rounded-lg border border-emerald-500/20">
+                {ticket.resolution.note}
+              </p>
+              {ticket.resolution.resolvedBy && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                  <User className="h-3.5 w-3.5" />
+                  <span>Resolved by <strong className="text-foreground">{ticket.resolution.resolvedBy.name || 'Technician'}</strong></span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Description */}
           <div className="gsap-reveal rounded-xl border bg-card shadow-sm p-6">
             <h3 className="font-semibold mb-3 text-base border-b pb-2">Description</h3>
@@ -415,6 +501,171 @@ const TicketDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Resolve Ticket Modal */}
+      <AnimatePresence>
+        {resolveModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl space-y-4"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Resolve Ticket</h3>
+                    <p className="text-xs text-muted-foreground">Document resolution details for {ticket.ticketId}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setResolveModalOpen(false); setResolutionNote(''); }}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleResolveTicket} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">
+                    Resolution Note <span className="text-destructive">*</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={resolutionNote}
+                    onChange={(e) => setResolutionNote(e.target.value)}
+                    placeholder="Describe the root cause and the steps taken to fix the issue..."
+                    autoFocus
+                    required
+                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This note will be recorded in the ticket history and shared with the requester.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <button
+                    type="button"
+                    disabled={resolving}
+                    onClick={() => { setResolveModalOpen(false); setResolutionNote(''); }}
+                    className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm hover:bg-accent transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resolving || !resolutionNote.trim()}
+                    className="inline-flex h-9 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white shadow hover:bg-emerald-700 transition-colors disabled:opacity-50 gap-1.5"
+                  >
+                    {resolving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Resolving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Confirm & Resolve
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reopen Ticket Modal */}
+      <AnimatePresence>
+        {reopenModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg rounded-xl border bg-card p-6 shadow-xl space-y-4"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-full bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400">
+                    <RotateCcw className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Reopen Ticket</h3>
+                    <p className="text-xs text-muted-foreground">Explain why this ticket is being reopened</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setReopenModalOpen(false); setReopenReason(''); }}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleReopenTicket} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">
+                    Reason for Reopening <span className="text-destructive">*</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={reopenReason}
+                    onChange={(e) => setReopenReason(e.target.value)}
+                    placeholder="Describe what is still not working or why the issue has re-occurred..."
+                    autoFocus
+                    required
+                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <button
+                    type="button"
+                    disabled={reopening}
+                    onClick={() => { setReopenModalOpen(false); setReopenReason(''); }}
+                    className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm hover:bg-accent transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={reopening || !reopenReason.trim()}
+                    className="inline-flex h-9 items-center justify-center rounded-md bg-destructive px-4 text-sm font-medium text-destructive-foreground shadow hover:bg-destructive/90 transition-colors disabled:opacity-50 gap-1.5"
+                  >
+                    {reopening ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Reopening...
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="h-4 w-4" />
+                        Reopen Ticket
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

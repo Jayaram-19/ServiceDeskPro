@@ -128,7 +128,8 @@ const getTicketById = async (req, res, next) => {
       .populate('department', 'name')
       .populate('slaPolicy')
       .populate('linkedArticles', 'title problemDescription solution tags status')
-      .populate('history.performedBy', 'name role');
+      .populate('history.performedBy', 'name role')
+      .populate('resolution.resolvedBy', 'name email avatar');
 
     if (!ticket) return errorResponse(res, 'Ticket not found', 404);
 
@@ -288,7 +289,17 @@ const resolveTicket = async (req, res, next) => {
     await notifyTicketResolved(ticket, ticket.requester);
     await logAction({ action: 'TICKET_RESOLVED', performedBy: userId, targetModel: 'Ticket', targetId: ticket._id, organization, details: { resolution }, req });
 
-    return successResponse(res, { ticket }, 'Ticket resolved');
+    const populated = await Ticket.findById(ticket._id)
+      .populate('requester', 'name email avatar department phone')
+      .populate('assignedTo', 'name email avatar phone')
+      .populate('category', 'name icon')
+      .populate('department', 'name')
+      .populate('slaPolicy')
+      .populate('linkedArticles', 'title problemDescription solution tags status')
+      .populate('history.performedBy', 'name role')
+      .populate('resolution.resolvedBy', 'name email avatar');
+
+    return successResponse(res, { ticket: populated }, 'Ticket resolved');
   } catch (err) {
     next(err);
   }
@@ -317,7 +328,17 @@ const reopenTicket = async (req, res, next) => {
 
     await logAction({ action: 'TICKET_REOPENED', performedBy: userId, targetModel: 'Ticket', targetId: ticket._id, organization, details: { reason }, req });
 
-    return successResponse(res, { ticket }, 'Ticket reopened');
+    const populated = await Ticket.findById(ticket._id)
+      .populate('requester', 'name email avatar department phone')
+      .populate('assignedTo', 'name email avatar phone')
+      .populate('category', 'name icon')
+      .populate('department', 'name')
+      .populate('slaPolicy')
+      .populate('linkedArticles', 'title problemDescription solution tags status')
+      .populate('history.performedBy', 'name role')
+      .populate('resolution.resolvedBy', 'name email avatar');
+
+    return successResponse(res, { ticket: populated }, 'Ticket reopened');
   } catch (err) {
     next(err);
   }
